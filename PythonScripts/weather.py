@@ -1,84 +1,54 @@
-# Weather.py
-# AI Weather skill
-# Kevin McAleer - July 2021
-
-from pyowm import OWM
-from geopy import Nominatim, location
+import requests_cache
+import pandas as pd
+from retry_requests import retry
+from geopy import Nominatim
 from datetime import datetime
 
-class Weather():
-
-    # The location of where you want the forecast for
-    __location = "Melbourne, AU"
-
-    # API Key
-    api_key = "022bf6a894ad5dde18272ab658c44c84"
-
-
+class Weather:
+    timestamp = 1609459200
+    url = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=uv_index_max&forecast_days=3"
+    
     def __init__(self):
-        self.ow = OWM(self.api_key)
-        self.mgr = self.ow.weather_manager()
+        self.cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+        self.retry_session = retry(self.cache_session, retries=5, backoff_factor=0.2)
         locator = Nominatim(user_agent="myGeocoder")
-        city = "Melbourne"
-        country = "AU"
-        self.__location = city + ", " + country
+        self.__location = "Melbourne, AU"
         loc = locator.geocode(self.__location)
         self.lat = loc.latitude
         self.long = loc.longitude
         print(self.__location)
 
-    def uv_index(self, uvi:float):
-        """ Returns a message depending on the UV Index provided """
-        message = ""
+    def uv_index(self, uvi: float) -> str:
+        """Returns a message depending on the UV Index provided."""
         if uvi <= 2.9:
-            message = "The Ultraviolet level is low, no protection is required."
-        if uvi >= 3.0 and uvi <6.0:
-            message = "The Ultraviolet level is medium, skin protection is required."
-        if uvi >= 6.0 and uvi <8.0:
-            message = "The Ultraviolet level is high, skin protection is required."
-        if uvi >= 8.0 and uvi <11.0:
-            message = "The Ultraviolet level is very high, extra skin protection is required."
-        if uvi >= 11.0:
-            message = "The Ultraviolet level is extremely high, caution is advised and extra skin protection is required."
-        return message
-
-   
+            return "The Ultraviolet level is low, no protection is required."
+        elif 3.0 <= uvi < 6.0:
+            return "The Ultraviolet level is medium, skin protection is required."
+        elif 6.0 <= uvi < 8.0:
+            return "The Ultraviolet level is high, skin protection is required."
+        elif 8.0 <= uvi < 11.0:
+            return "The Ultraviolet level is very high, extra skin protection is required."
+        else:
+            return "The Ultraviolet level is extremely high, caution is advised and extra skin protection is required."
 
     @property
     def forecast(self):
-        """ Returns the forecast at this location """
-
-        forecast = self.mgr.one_call(lat=self.lat, lon=self.long)
-        detail_status = forecast.forecast_daily[0].detailed_status
-        pressure = str(forecast.forecast_daily[0].pressure.get('press'))
-        humidity = str(forecast.forecast_daily[0].humidity)
-        sunrise = datetime.utcfromtimestamp(forecast.forecast_daily[0].sunrise_time()).strftime("%H:%M:%S")
-        sunset = datetime.utcfromtimestamp(forecast.forecast_daily[0].sunset_time()).strftime("%H:%M:%S")
-        temperature = str(forecast.forecast_daily[0].temperature('celsius').get('day'))
-        uvi = forecast.forecast_daily[0].uvi
-
-        print('detailed status: ', detail_status)
-        print("humidity ", humidity)
-        print("pressure ", pressure)
-        print("sunrise: ", sunrise)
-        print("Sunset ", sunset)
-        print("temperature", temperature)
-        print("UVI ", uvi)
-        
-        message = "Here is the Weather: Today will be mostly " + detail_status \
-                + ", humidity of " + humidity + " percent" \
-                + " and a pressure of " + pressure + " millibars" \
-                + ". The temperature is " + temperature + "degrees " \
-                + ". Sunrise was at " + sunrise \
-                + " and sunset is at " + sunset \
-                + ". " + self.uv_index(uvi)
-
-        # print(message)
-        return message
+        url = self.url.format(lat=self.lat, lon=self.long)
+        response = self.retry_session.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            current_weather = data['current_weather']
+            temperature = current_weather['temperature']
+            time = current_weather['time']
+            uv_index_max = data['daily']['uv_index_max'][0]
+            
+            print(f"Time: {time}")
+            print(f"Temperature: {temperature}°C")
+            print(f"UV Index: {uv_index_max}")
+            print(self.uv_index(uv_index_max))
+        else:
+            print(f"Failed to retrieve data: {response.status_code}")
 
 # Demo
-#myweather = Weather()
-#print(myweather.forecast)
-
-
-    
+myweather = Weather()
+myweather.forecast
