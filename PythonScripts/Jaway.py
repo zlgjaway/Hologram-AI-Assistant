@@ -20,10 +20,12 @@ def joke():
     print(funny)
     jaway.say("Here is your favorite joke: " + funny)
 
+
+
 def weather():
     myweather = Weather()
-    forecast = myweather.forecast
-    jaway.say(forecast)
+    forecast = myweather.forecast_today
+    jaway.say( forecast)
 
 def add_todo() -> bool:
     item = Item()
@@ -133,7 +135,11 @@ def TrigerrandomAction1():
     else:
         print("skip")
     
+def Triger_forecast():
+    send_message_to_unity("Triger forecast ")
 
+def Unriger_forecast():
+    send_message_to_unity("untriger forecast ")
 
 def list_events(period):
     try:
@@ -172,7 +178,10 @@ command = ""
 if __name__ == "__main__":
     while True:
         try:
-            TrigerrandomAction1()
+            command = ""
+            Triger_forecast()
+            weather()
+            Unriger_forecast()
             command = jaway.listen()
             if wake in command:
                 TrigerrandomAction1()
@@ -191,7 +200,9 @@ if __name__ == "__main__":
                 elif "remove" in command:
                     remove_todo()
                 elif "weather" in command:
+                    Triger_forecast()
                     weather()
+                    Unriger_forecast()
                 elif command in ["good morning", "good afternoon", "good evening"]:
                     now = datetime.now()
                     hr = now.hour
@@ -217,5 +228,6 @@ if __name__ == "__main__":
                     list_events(period='this week')
                 elif command in ['event']:
                     list_events(period='all')
-        except:
+        except :
             print(f"Oops, there was an error")
+            command = ""

@@ -1,22 +1,22 @@
 import requests_cache
-import pandas as pd
 from retry_requests import retry
 from geopy import Nominatim
-from datetime import datetime
+from datetime import datetime, timezone
+import json
 
 class Weather:
     timestamp = 1609459200
-    url = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=uv_index_max&forecast_days=3"
+    url = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=uv_index_max&forecast_days=3&daily=sunrise,sunset"
     
     def __init__(self):
         self.cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
         self.retry_session = retry(self.cache_session, retries=5, backoff_factor=0.2)
-        locator = Nominatim(user_agent="myGeocoder")
+        geolocator = Nominatim(user_agent="Geocoder")
         self.__location = "Melbourne, AU"
-        loc = locator.geocode(self.__location)
+        loc = geolocator.geocode(self.__location)
         self.lat = loc.latitude
         self.long = loc.longitude
-        print(self.__location)
+        print(f"Location: {self.__location}")
 
     def uv_index(self, uvi: float) -> str:
         """Returns a message depending on the UV Index provided."""
@@ -32,23 +32,46 @@ class Weather:
             return "The Ultraviolet level is extremely high, caution is advised and extra skin protection is required."
 
     @property
-    def forecast(self):
-        url = self.url.format(lat=self.lat, lon=self.long)
-        response = self.retry_session.get(url)
-        if response.status_code == 200:
+    def forecast_today(self):
+        try:
+            url = self.url.format(lat=self.lat, lon=self.long)
+            print(f"Requesting URL: {url}")
+            response = self.retry_session.get(url)
+            response.raise_for_status()  # Raise an HTTPError for bad responses
             data = response.json()
+            print("Data retrieved successfully.")
+            
+            with open("weather.json", "w") as json_file:
+                json.dump(data, json_file, indent=4)
+                print("Data written to weather.json successfully.")
+            
             current_weather = data['current_weather']
             temperature = current_weather['temperature']
-            time = current_weather['time']
             uv_index_max = data['daily']['uv_index_max'][0]
-            
-            print(f"Time: {time}")
-            print(f"Temperature: {temperature}°C")
-            print(f"UV Index: {uv_index_max}")
-            print(self.uv_index(uv_index_max))
-        else:
-            print(f"Failed to retrieve data: {response.status_code}")
+            sunrise_str = data['daily']['sunrise'][0]
+            sunset_str = data['daily']['sunset'][0]
 
-# Demo
-myweather = Weather()
-myweather.forecast
+            sunrise = datetime.fromisoformat(sunrise_str)
+            sunset = datetime.fromisoformat(sunset_str)
+            
+            # Convert to UTC timezone if needed
+            sunrise_utc = sunrise.astimezone(timezone.utc)
+            sunset_utc = sunset.astimezone(timezone.utc)
+            
+            # Format as string
+            sunrise_formatted = sunrise_utc.strftime("%H:%M:%S")
+            sunset_formatted = sunset_utc.strftime("%H:%M:%S")
+
+            # Summary Information
+
+            message =( 
+                f"Here is the Weather: Today The temperature is: {temperature}°C\n"
+                f". Sunrise was at  {sunrise_formatted} \n"
+                f" and sunset is at  {sunset_formatted} \n"
+                f"UV Index: {uv_index_max} ({self.uv_index(uv_index_max)})"
+            )
+            return message
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return "Failed to retrieve weather data."
