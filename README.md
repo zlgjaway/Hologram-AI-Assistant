@@ -53,33 +53,33 @@ Run
 📂 Project Structure
 
 Hologram-AI-Assistant/
-├── PythonScripts/
-
-│   ├── ai.py
-
-│   ├── Jaway.py
-
-│   ├── Animation.py
-
-│   ├── calendar_skill.py
-
-│   ├── todo.py
-
-│   ├── weather.py
-
-│   └── test.py
-
-├── Assets/Scripts/
-
+│   ├──Assets/Scripts/
+│
+│   │   ├── PythonScripts/
+│
+│   │   │   ├── ai.py
+│
+│   │   │   ├── Jaway.py
+│
+│   │   │   ├── Animation.py
+│
+│   │   │   ├── calendar_skill.py
+│
+│   │   │   ├── todo.py
+│
+│   │   │   ├── weather.py
+│
+│   │   │   └── test.py
+│
 │   ├── FullscreenGameView.cs
-
+│
 │   ├── SocketServer.cs
-
+│
 │   └── Test.cs
-
-├── README.md
-
-└── .git/
+│
+│   ├── README.md
+│
+│   └── .git/
 
 
 3.Unity will communicate with the Python AI to drive animations and responses.
