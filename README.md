@@ -54,18 +54,31 @@ Run
 
 Hologram-AI-Assistant/
 ├── PythonScripts/
+
 │   ├── ai.py
+
 │   ├── Jaway.py
+
 │   ├── Animation.py
+
 │   ├── calendar_skill.py
+
 │   ├── todo.py
+
 │   ├── weather.py
+
 │   └── test.py
+
 ├── Assets/Scripts/
+
 │   ├── FullscreenGameView.cs
+
 │   ├── SocketServer.cs
+
 │   └── Test.cs
+
 ├── README.md
+
 └── .git/
 
 
@@ -74,6 +87,7 @@ Hologram-AI-Assistant/
 📜 License
 
 This project is for educational and experimental purposes.
+
 
 
 
