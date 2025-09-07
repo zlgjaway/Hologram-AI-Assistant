@@ -6,9 +6,10 @@ using System.Threading;
 using UnityEngine;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine.UI;
 using Newtonsoft.Json;
-
+using System.IO;
 public class WeatherData
 {
     public double latitude { get; set; }
@@ -28,17 +29,26 @@ public class WeatherData
     }
 }
 
-public class SocketServer : MonoBehaviour
+public class SocketServer: MonoBehaviour
 {
     private TcpListener server;
     private ConcurrentQueue<string> messageQueue = new ConcurrentQueue<string>();
     private Thread serverThread;
     public int port = 8080;
     public Animator[] myAnimators;
+    public GameObject canvas;
     public GameObject panel;
+    public GameObject panel2;
+    public GameObject panel3;
     public Text temperatureText;
+    public Text temperatureText2;
+    public Text temperatureText3;
     public Text uvIndexText;
-    public UnityEngine.UI.Image weatherIcon; // Add this to show the weather icon
+    public Text uvIndexText2;
+    public Text uvIndexText3;
+    public Image weatherIcon; // Add this to show the weather icon
+    public Image weatherIcon2; // Add this to show the weather icon2
+    public Image weatherIcon3; // Add this to show the weather icon3
     public Sprite[] weatherIcons; // Array to hold different weather icons
 
     void Start()
@@ -53,20 +63,64 @@ public class SocketServer : MonoBehaviour
         serverThread = new Thread(new ThreadStart(ServerStart));
         serverThread.IsBackground = true;
         serverThread.Start();
-        
         panel.SetActive(false);
+        panel2.SetActive(false);
+        panel3.SetActive(false);
+        canvas.SetActive(false);
+
+    }
+    IEnumerator ActivatePanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        panel.SetActive(true);
+        panel2.SetActive(true);
+        panel3.SetActive(true);
+        canvas.SetActive(true);
     }
 
     void Update()
     {
-        // Example JSON string, replace with actual data from server
-        string json = "{ \"latitude\": -37.75, \"longitude\": 144.875, \"current_weather\": { \"temperature\": 7.5, \"weathercode\": 0 }, \"daily\": { \"uv_index_max\": [ 2.9, 2.9, 2.9 ] } }";
-        WeatherData weatherData = JsonConvert.DeserializeObject<WeatherData>(json);
+        string filePath = Path.Combine(Application.dataPath, "D:\\My project\\weather.json");
 
-        // Process messages on the main thread
-        while (messageQueue.TryDequeue(out string message))
+        // Retry mechanism
+        int maxRetries = 5;
+        int delayMilliseconds = 10;
+
+        for (int i = 0; i < maxRetries; i++)
         {
-            ProcessMessage(message, weatherData);
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    // Open the file with shared read access
+                    using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        string json = sr.ReadToEnd();
+                        WeatherData weatherData = JsonConvert.DeserializeObject<WeatherData>(json);
+
+                    // Process messages on the main thread
+                        while (messageQueue.TryDequeue(out string message))
+                        {
+                            ProcessMessage(message, weatherData);
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"File not found at path: {filePath}");
+                }
+
+                // Exit the retry loop if successful
+                break;
+            }
+            catch (IOException ex)
+            {
+                Debug.LogWarning($"IOException: {ex.Message}. Retrying in {delayMilliseconds}ms...");
+
+                // Wait before retrying
+                Thread.Sleep(delayMilliseconds);
+            }
         }
     }
 
@@ -99,6 +153,28 @@ public class SocketServer : MonoBehaviour
             Debug.LogError("Socket error: " + e.Message);
         }
     }
+    
+
+    private void ProcessMessage(string message, WeatherData weatherData)
+    {
+        Debug.Log($"Received message: {message}");
+        switch (message)
+        {
+            case "Triger random Action 1":
+                TrigerrandomAction1();
+                break;
+            case "Triger forecast":
+                Triger_forecast();
+                DisplayWeatherData(weatherData);
+                break;
+            case "untriger forecast":
+                unTriger_forecast();
+                break;
+            default:
+                Debug.LogWarning($"Unknown message: {message}");
+                break;
+        }
+    }
 
     private void TrigerrandomAction1()
     {
@@ -111,16 +187,20 @@ public class SocketServer : MonoBehaviour
 
     private void Triger_forecast()
     {
+         Debug.Log("Triggering forecast animation...");
         foreach (Animator animator in myAnimators)
         {
             animator.SetTrigger("Triger forecast ");
         }
-        Debug.Log("forecast animation triggered.");
     }
 
     private void unTriger_forecast()
     {   
+        canvas.SetActive(false);
         panel.SetActive(false); // Hide the panel
+        panel2.SetActive(false);// Hide the panel
+        panel3.SetActive(false);// Hide the panel
+
         foreach (Animator animator in myAnimators)
         {
             animator.SetTrigger("untriger forecast");
@@ -137,13 +217,22 @@ public class SocketServer : MonoBehaviour
             return;
         }
 
-        panel.SetActive(true);
+        StartCoroutine(ActivatePanelAfterDelay(2.06f));
         temperatureText.text = $"{weatherData.current_weather.temperature}°C";
+        temperatureText2.text = $"{weatherData.current_weather.temperature}°C";
+        temperatureText3.text = $"{weatherData.current_weather.temperature}°C";
         uvIndexText.text = $"UV Index: {weatherData.daily.uv_index_max[0]}";
+        uvIndexText2.text = $"UV Index: {weatherData.daily.uv_index_max[0]}";
+        uvIndexText3.text = $"UV Index: {weatherData.daily.uv_index_max[0]}";
+
+
 
         // Set the weather icon based on the weather code
         weatherIcon.sprite = GetWeatherIcon(weatherData.current_weather.weathercode);
+        weatherIcon2.sprite = GetWeatherIcon(weatherData.current_weather.weathercode);
+        weatherIcon3.sprite = GetWeatherIcon(weatherData.current_weather.weathercode);
     }
+   
 
     private Sprite GetWeatherIcon(int weatherCode)
     {
@@ -166,30 +255,11 @@ public class SocketServer : MonoBehaviour
             case 3:
                 return weatherIcons[3]; // Thunderstorm icon
             default:
-                return weatherIcons[5];              
+                return weatherIcons[0];              
         }
     }
 
-    private void ProcessMessage(string message, WeatherData weatherData)
-    {
-        Debug.Log($"Received message: {message}");
-        switch (message)
-        {
-            case "Triger Action 1":
-                TrigerrandomAction1();
-                break;
-            case "Triger forecast ":
-                Triger_forecast();
-                DisplayWeatherData(weatherData);
-                break;
-            case "untriger forecast":
-                unTriger_forecast();
-                break;
-            default:
-                Debug.LogWarning($"Unknown message: {message}");
-                break;
-        }
-    }
+    
 
     void OnApplicationQuit()
     {

@@ -130,16 +130,17 @@ def send_message_to_unity(message):
 
 
 def TrigerrandomAction1():
-    if random.randint(1,50)==1:
-        send_message_to_unity("Triger Action 1")
+    if random.randint(1,2)==1:
+        send_message_to_unity("Triger random Action 1")
     else:
         print("skip")
+
     
 def Triger_forecast():
-    send_message_to_unity("Triger forecast ")
+    send_message_to_unity("Triger forecast")
 
 def Unriger_forecast():
-    send_message_to_unity("untriger forecast ")
+    send_message_to_unity("untriger forecast")
 
 def list_events(period):
     try:
@@ -178,10 +179,10 @@ command = ""
 if __name__ == "__main__":
     while True:
         try:
-            command = ""
             Triger_forecast()
             weather()
             Unriger_forecast()
+            command = ""
             command = jaway.listen()
             if wake in command:
                 TrigerrandomAction1()
