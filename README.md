@@ -6,7 +6,6 @@ The assistant can respond to user input, manage tasks, check the weather, and in
 
 ## 📸 Demo Screenshot
 ![Hologram AI Assistant Demo](demo/446079647_1281662572797177_2202408616915992201_n.png)
-![Hologram AI Assistant Demo](b8e446dd-a32a-4688-a4ac-97f19413db39.jpg)
 [Demo Video](demo/1f22497f-3f93-49fc-bf44-c6db73c6a46f.mp4)
 
 ✨ Features
@@ -58,31 +57,31 @@ Run
 
 Hologram-AI-Assistant/
 │   ├──Assets/Scripts/
-│
+
 │   │   ├── PythonScripts/
-│
+
 │   │   │   ├── ai.py
-│
+
 │   │   │   ├── Jaway.py
-│
+
 │   │   │   ├── Animation.py
-│
+
 │   │   │   ├── calendar_skill.py
-│
+
 │   │   │   ├── todo.py
-│
+
 │   │   │   ├── weather.py
-│
+
 │   │   │   └── test.py
-│
+
 │   ├── FullscreenGameView.cs
-│
+
 │   ├── SocketServer.cs
-│
+
 │   └── Test.cs
-│
+
 │   ├── README.md
-│
+
 │   └── .git/
 
 
