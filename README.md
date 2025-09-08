@@ -6,6 +6,8 @@ The assistant can respond to user input, manage tasks, check the weather, and in
 
 ## 📸 Demo Screenshot
 ![Hologram AI Assistant Demo](demo/446079647_1281662572797177_2202408616915992201_n.png)
+![Hologram AI Assistant Demo](demo/b8e446dd-a32a-4688-a4ac-97f19413db39.jpg)
+![Hologram AI Assistant Demo](demo/805a4d2d-10a4-451e-801d-779e63143bca.jpg)
 [Demo Video](https://youtu.be/NRU3NxvboQc)
 
 ✨ Features
